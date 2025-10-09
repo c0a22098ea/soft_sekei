@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+html {
+    font-size: 100%;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+    background-color: #cccccc;
+}
