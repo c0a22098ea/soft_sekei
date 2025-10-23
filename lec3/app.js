@@ -198,6 +198,49 @@ function createTetromino() {
             name: 'L',
             x: 4,
             y: 0
+        },
+        {
+            shape: [
+                [1, 1],
+                [1, 1]
+            ],
+            color: 'yellow',
+            name: 'O',
+            x: 4,
+            y: 0
+        },
+        {
+            shape: [
+                [0, 1, 1],
+                [1, 1, 0],
+                [0, 0, 0]
+            ],
+            color: 'green',
+            name: 'S',
+            x: 4,
+            y: 0
+        },
+        {
+            shape: [
+                [0, 1, 0],
+                [1, 1, 1],
+                [0, 0, 0]
+            ],
+            color: 'purple',
+            name: 'T',
+            x: 4,
+            y: 0
+        },
+        {
+            shape: [
+                [1, 1, 0],
+                [0, 1, 1],
+                [0, 0, 0]
+            ],
+            color: 'red',
+            name: 'Z',
+            x: 4,
+            y: 0
         }
     ];
 
