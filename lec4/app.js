@@ -88,6 +88,9 @@ function handleMovementKey(key) {
         case 'ArrowDown':
             moveTetromino(0, 1);
             break;
+        case 'ArrowUp':
+            hardDrop();
+            break;
         default:
             break;
     }
@@ -147,6 +150,17 @@ function moveTetromino(deltaX, deltaY) {
         fixTetromino();
         tetromino = createTetromino();
     }
+}
+
+// ハードドロップ機能を追加
+function hardDrop() {
+    // テトロミノが下に移動できなくなるまで繰り返し移動
+    while (canMove(tetromino, 0, 1)) {
+        tetromino.y += 1;
+    }
+    // 固定化して新しいテトロミノを生成
+    fixTetromino();
+    tetromino = createTetromino();
 }
 
 // ゲームを最初の状態に戻す
