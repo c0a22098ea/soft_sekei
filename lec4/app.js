@@ -21,6 +21,10 @@ const debugInfo = {
 const playfieldCanvas = document.getElementById('playfield');
 const playfieldContext = playfieldCanvas.getContext('2d');
 
+
+// ゲームフィールド（固定されたブロックを管理）
+const gameField = Array(FIELD_HEIGHT).fill(null).map(() => Array(FIELD_WIDTH).fill(0));
+
 // テトロミノ
 let tetromino = createTetromino();
 
@@ -96,6 +100,8 @@ function renderFrame() {
     // 画面をクリアしてから格子を描画する
     renderPlayfieldGrids();
 
+    // 固定されたブロックを描画
+    renderFixed();
     // ここに描画処理を追加していく
     renderDebugInfo();
     // renderFigure();
@@ -132,15 +138,49 @@ function updateGameState() {
     moveTetromino(0, 1);
 }
 
+// テトロミノを指定されたオフセット分移動する
 function moveTetromino(deltaX, deltaY) {
-    tetromino.x += deltaX;
-    tetromino.y += deltaY;
+    if (canMove(tetromino, deltaX, deltaY)) {
+        tetromino.x += deltaX;
+        tetromino.y += deltaY;
+    } else if(!canMove(tetromino,0,1)) {
+        fixTetromino();
+        tetromino = createTetromino();
+    }
 }
 
 // ゲームを最初の状態に戻す
 function resetGameState() {
     tetromino = createTetromino();
     debugInfo.key = 'reset';
+}
+
+// テトロミノが指定されたオフセットに移動できるかどうかをチェックする
+function canMove(tetromino, offsetX, offsetY) {
+    for (let row = 0; row < tetromino.shape.length; row++) {
+        for (let col = 0; col < tetromino.shape[row].length; col++) {
+            if (tetromino.shape[row][col]) {
+                const fieldX = tetromino.x + col + offsetX;
+                const fieldY = tetromino.y + row + offsetY;
+
+                // フィールドの範囲外かどうかをチェック
+                if (inBounds(fieldY)) {
+                    return false;
+                }
+
+                // 衝突するか検討する
+                if (fieldY >= 0 && fieldX >= 0 && fieldX < FIELD_WIDTH && gameField[fieldY][fieldX] !==0 ){
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+// テトロミノがフィールドの範囲外かを確認する
+function inBounds(y) {
+    return y >= FIELD_HEIGHT;
 }
 
 // 図形を描く
@@ -267,4 +307,31 @@ function drawTetrominoCell(tetromino, col, row) {
     const y = (tetromino.y + row) * CELL_SIZE;
     playfieldContext.fillRect(x, y, CELL_SIZE, CELL_SIZE);
     playfieldContext.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+}
+
+// テトロミノを固定化する
+function fixTetromino() {
+    for (let row = 0; row < tetromino.shape.length; row++) {
+        for (let col = 0; col < tetromino.shape[row].length; col++) {
+            if (tetromino.shape[row][col]) {
+                const fieldX = tetromino.x + col;
+                const fieldY = tetromino.y + row;
+                gameField[fieldY][fieldX] = tetromino.color;
+            }    
+        }
+    }
+}
+
+// 固定されたブロックを描画する
+function renderFixed() {
+    playfieldContext.strokeStyle = 'black';
+    for (let row = 0; row < FIELD_HEIGHT; row++) {
+        for (let col = 0; col < FIELD_WIDTH; col++) {
+            playfieldContext.fillStyle = gameField[row][col];
+            if (gameField[row][col] !== 0) {
+                playfieldContext.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                playfieldContext.strokeRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            }
+        }
+    }
 }
