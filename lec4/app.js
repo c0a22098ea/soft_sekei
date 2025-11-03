@@ -164,12 +164,12 @@ function canMove(tetromino, offsetX, offsetY) {
                 const fieldY = tetromino.y + row + offsetY;
 
                 // フィールドの範囲外かどうかをチェック
-                if (inBounds(fieldY)) {
+                if (!inBounds(fieldX,fieldY)) {
                     return false;
                 }
 
                 // 衝突するか検討する
-                if (fieldY >= 0 && fieldX >= 0 && fieldX < FIELD_WIDTH && gameField[fieldY][fieldX] !==0 ){
+                if (inBounds(fieldX,fieldY) && gameField[fieldY][fieldX] !==0 ){
                     return false;
                 }
             }
@@ -179,8 +179,8 @@ function canMove(tetromino, offsetX, offsetY) {
 }
 
 // テトロミノがフィールドの範囲外かを確認する
-function inBounds(y) {
-    return y >= FIELD_HEIGHT;
+function inBounds(x,y) {
+    return y < FIELD_HEIGHT && x >= 0 && x < FIELD_WIDTH;
 }
 
 // 図形を描く
@@ -328,7 +328,7 @@ function renderFixed() {
     for (let row = 0; row < FIELD_HEIGHT; row++) {
         for (let col = 0; col < FIELD_WIDTH; col++) {
             playfieldContext.fillStyle = gameField[row][col];
-            if (gameField[row][col] !== 0) {
+            if (inBounds(col,row) && gameField[row][col] !== 0) {
                 playfieldContext.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 playfieldContext.strokeRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
