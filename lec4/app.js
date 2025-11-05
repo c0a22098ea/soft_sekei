@@ -194,6 +194,9 @@ function hardDrop() {
         tetromino.y += 1;
     }
     fixTetromino();
+    // ライン消去処理
+    clearCompletedLines();
+    // 新しいテトロミノを生成してゲームオーバーかチェック
     tetromino = createTetromino();
     checkGameOver();
 }
@@ -394,6 +397,100 @@ function rotateShape(shape) {
     }
     
     return rotated;
+}
+
+// テトロミノを指定されたオフセット分移動する
+function moveTetromino(deltaX, deltaY) {
+    if (canMove(tetromino, deltaX, deltaY)) {
+        tetromino.x += deltaX;
+        tetromino.y += deltaY;
+    } else if(!canMove(tetromino,0,1)) {
+        // 下に移動できない場合は固定化して新しいテトロミノを生成
+        fixTetromino();
+        
+        // ライン消去処理
+        clearCompletedLines();
+
+        // 新しいミノを生成してからゲームオーバーかチェック
+        tetromino = createTetromino();
+
+        checkGameOver()
+        
+    }
+}
+
+// ハードドロップ機能を追加
+function hardDrop() {
+    // テトロミノが下に移動できなくなるまで繰り返し移動
+    while (canMove(tetromino, 0, 1)) {
+        tetromino.y += 1;
+    }
+    fixTetromino();
+    // ライン消去処理
+    clearCompletedLines()
+    // 新しいテトロミノを生成してゲームオーバーかチェック
+    tetromino = createTetromino();
+    checkGameOver();
+}
+
+// 完成した行のインデックスを見つける
+function findCompletedLines() {
+    const completedLines = [];
+
+    for (let row = 0; row < FIELD_HEIGHT; row++) {
+        if (isLineComplete(row)) {
+            completedLines.push(row);
+            }
+    }
+    return completedLines;
+}
+
+// 指定した行が完成しているかチェックする
+function isLineComplete(row) {
+    for (let col = 0; col < FIELD_WIDTH; col++) {
+        if (gameField[row][col] === 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// より効率的な実装（代替案）
+function removeLinesAlternative(lineIndices) {
+    if (lineIndices.length === 0) return;
+    
+    // 新しいゲームフィールドを作成
+    const newGameField = [];
+    
+    // 削除対象の行をSetに変換（高速検索のため）
+    const linesToRemove = new Set(lineIndices);
+    
+    // 削除する行数分の空行を上部に追加
+    for (let i = 0; i < lineIndices.length; i++) {
+        newGameField.push(Array(FIELD_WIDTH).fill(0));
+    }
+     // 削除対象でない行のみを新しいフィールドに追加
+    for (let row = 0; row < FIELD_HEIGHT; row++) {
+        if (!linesToRemove.has(row)) {
+            newGameField.push([...gameField[row]]);
+        }
+    }
+    
+    // 新しいフィールドで置き換え
+    for (let row = 0; row < FIELD_HEIGHT; row++) {
+        for (let col = 0; col < FIELD_WIDTH; col++) {
+            gameField[row][col] = newGameField[row][col];
+        }
+    }
+}
+
+// 完成した行を消去する（メイン関数）
+function clearCompletedLines() {
+    const completedLines = findCompletedLines();
+    
+    if (completedLines.length > 0) {
+        removeLinesAlternative(completedLines);
+    }
 }
 
 // テトロミノを描画する
