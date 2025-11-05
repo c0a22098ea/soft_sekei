@@ -98,6 +98,9 @@ function handleMovementKey(key) {
         case ' ':
             hardDrop();
             break;
+        case 'ArrowUp':
+            rotateTetromino(tetromino.shape);
+            break;
         default:
             break;
     }
@@ -342,6 +345,55 @@ function createTetromino() {
 
     // ランダムに1つ選んで返す。ただしTetrisのルールではない。
     return minoes[Math.floor(Math.random() * minoes.length)];
+}
+
+
+function rotateTetromino() {
+    // 現在の形状を保存（回転に失敗した場合に戻すため）
+    const originalShape = tetromino.shape;
+    // 時計回りに90度回転
+    const rotatedShape = rotateShape(tetromino.shape);
+    // 一時的に回転した形状を設定
+    tetromino.shape = rotatedShape;
+    // 回転後の位置で移動可能かチェック
+    if (canMove(tetromino, 0, 0)) {
+        // 回転可能な場合はそのまま確定
+        return;
+    }
+    // 壁蹴り（Wall Kick）を試す
+    const wallKickOffsets = [
+        [-1, 0], [1, 0],  // 左右に1マス移動
+        [-2, 0], [2, 0],  // 左右に2マス移動
+        [0, -1],          // 上に1マス移動
+        [-1, -1], [1, -1] // 斜め上に移動
+    ];
+    for (const [offsetX, offsetY] of wallKickOffsets) {
+        if (canMove(tetromino, offsetX, offsetY)) {
+            // 壁蹴りが成功した場合、位置を調整
+            tetromino.x += offsetX;
+            tetromino.y += offsetY;
+            return;
+        }
+    }
+    // 回転できない場合は元の形状に戻す
+    tetromino.shape = originalShape;
+}
+
+// 2次元配列を時計回りに90度回転させる
+function rotateShape(shape) {
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const rotated = [];
+
+    // 新しい配列を初期化
+    for (let i = 0; i < cols; i++) {
+        rotated[i] = [];
+        for (let j = 0; j < rows; j++) {
+            rotated[i][j] = shape[rows - 1 - j][i];
+        }
+    }
+    
+    return rotated;
 }
 
 // テトロミノを描画する
