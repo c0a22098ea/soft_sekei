@@ -8,6 +8,7 @@ const gameLoopState = {
     intervalMs: 500,
     id: null,
     running: false,
+    gameOver: false,
 };
 
 // for debug
@@ -51,9 +52,15 @@ function handleKeyDown(event) {
         return;
     }
 
+    if (gameLoopState.gameOver) {
+        return;
+    }
+
     if (!gameLoopState.running) {
         return; // pause中は以下の処理をしない
     }
+
+    
 
     handleMovementKey(event.key);
 }
@@ -88,7 +95,7 @@ function handleMovementKey(key) {
         case 'ArrowDown':
             moveTetromino(0, 1);
             break;
-        case 'ArrowUp':
+        case ' ':
             hardDrop();
             break;
         default:
@@ -121,6 +128,10 @@ function renderDebugInfo() {
 
     const text = `(${tetromino.x}, ${tetromino.y}), ${gameLoopState.running}, ${debugInfo.key}`;
     playfieldContext.fillText(text, CELL_SIZE / 4, CELL_SIZE / 2);
+
+    if (gameLoopState.gameOver) {
+        renderGameOverScreen();
+    }
 }
 
 // ゲームループを開始する
@@ -136,6 +147,21 @@ function pauseGameLoop() {
     gameLoopState.running = false;
 }
 
+// ゲームオーバー処理
+function gameOver() {
+    pauseGameLoop();
+    gameLoopState.gameOver = true;
+}   
+
+// ゲームオーバーかどうかをチェックする
+function checkGameOver() {
+    if (!canMove(tetromino, 0, 0)) {
+        gameOver();
+        return true;
+    }
+    return false;
+}
+
 // ゲームの状態を更新する
 function updateGameState() {
     moveTetromino(0, 1);
@@ -147,8 +173,14 @@ function moveTetromino(deltaX, deltaY) {
         tetromino.x += deltaX;
         tetromino.y += deltaY;
     } else if(!canMove(tetromino,0,1)) {
+        // 下に移動できない場合は固定化して新しいテトロミノを生成
         fixTetromino();
+
+        // 新しいミノを生成してからゲームオーバーかチェック
         tetromino = createTetromino();
+
+        checkGameOver()
+        
     }
 }
 
@@ -158,15 +190,25 @@ function hardDrop() {
     while (canMove(tetromino, 0, 1)) {
         tetromino.y += 1;
     }
-    // 固定化して新しいテトロミノを生成
     fixTetromino();
     tetromino = createTetromino();
+    checkGameOver();
 }
 
 // ゲームを最初の状態に戻す
 function resetGameState() {
     tetromino = createTetromino();
+    resetGameField();
+    gameLoopState.gameOver = false;
     debugInfo.key = 'reset';
+}
+
+function resetGameField() {
+    for (let row = 0; row < FIELD_HEIGHT; row++) {
+        for (let col = 0; col < FIELD_WIDTH; col++) {
+            gameField[row][col] = 0;
+        }
+    }
 }
 
 // テトロミノが指定されたオフセットに移動できるかどうかをチェックする
@@ -304,6 +346,10 @@ function createTetromino() {
 
 // テトロミノを描画する
 function renderTetromino(tetromino) {
+    // ゲームオーバー時は現在のテトロミノを描画しない（重なり防止）
+    if (gameLoopState.gameOver) {
+        return;
+    }
     playfieldContext.fillStyle = tetromino.color;
     playfieldContext.strokeStyle = 'black';
     for (let row = 0; row < tetromino.shape.length; row++) {
@@ -349,3 +395,33 @@ function renderFixed() {
         }
     }
 }
+
+// ゲームオーバー画面を描画する
+function renderGameOverScreen() {
+    // 半透明の背景を描画
+    playfieldContext.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    playfieldContext.fillRect(0, 0, playfieldCanvas.width, playfieldCanvas.height);
+    
+    // ゲームオーバーのメインタイトル
+    playfieldContext.font = 'bold 32px arial';
+    playfieldContext.fillStyle = 'red';
+    playfieldContext.textAlign = 'center';
+    const gameOverText = 'GAME OVER';
+    playfieldContext.fillText(gameOverText, playfieldCanvas.width / 2, playfieldCanvas.height / 2 - 40);
+    
+    // リスタート案内
+    playfieldContext.font = '18px arial';
+    playfieldContext.fillStyle = 'white';
+    const restartText = 'Press R to reset';
+    playfieldContext.fillText(restartText, playfieldCanvas.width / 2, playfieldCanvas.height / 2 + 20);
+    
+    // 追加情報
+    playfieldContext.font = '14px arial';
+    playfieldContext.fillStyle = 'lightgray';
+    const infoText = 'Press R to reset • Press Enter to pause/resume';
+    playfieldContext.fillText(infoText, playfieldCanvas.width / 2, playfieldCanvas.height / 2 + 50);
+    
+    // テキストの配置を元に戻す
+    playfieldContext.textAlign = 'left';
+}
+
